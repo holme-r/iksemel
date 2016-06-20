@@ -134,8 +134,8 @@ tls_handshake (struct ikstls_data **datap, ikstransport *trans, void *sock)
 		return IKS_NOMEM;
 	}
 
-  // disable weak SSLv2 and SSLv3 protocols //
-  SSL_CTX_set_options(data->ctx, SSL_OP_ALL|SSL_OP_NO_SSLv2|SSL_OP_NO_SSLv3);
+	// disable weak SSLv2 and SSLv3 protocols
+	SSL_CTX_set_options(data->ctx, SSL_OP_ALL|SSL_OP_NO_SSLv2|SSL_OP_NO_SSLv3);
 
 	data->ssl = SSL_new (data->ctx);
 	if (!data->ssl) {
@@ -164,9 +164,9 @@ tls_send (struct ikstls_data *data, const char *buf, size_t size)
 	int r;
 
 	r = SSL_write (data->ssl, buf, size);
-  if (r == size) {
-    	return IKS_OK;
-  }
+	if (r == size) {
+		return IKS_OK;
+	}
 
 	switch (SSL_get_error(data->ssl, r)) {
 		case SSL_ERROR_NONE:
@@ -183,9 +183,9 @@ tls_recv (struct ikstls_data *data, char *buf, size_t size, int timeout)
 
 	data->timeout = timeout;
 	r = SSL_read (data->ssl, buf, size);
-  if (r >= 0) {
-    	return r;
-  }
+	if (r >= 0) {
+		return r;
+	}
 
 	switch (SSL_get_error(data->ssl, r)) {
 		case SSL_ERROR_NONE:

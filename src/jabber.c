@@ -7,6 +7,15 @@
 #include "common.h"
 #include "iksemel.h"
 
+static const char *iksemel_version = "1.5.1";
+
+
+const char *iks_version(void)
+{
+	return iksemel_version;
+}
+
+
 iksid *
 iks_id_new (ikstack *s, const char *jid)
 {
