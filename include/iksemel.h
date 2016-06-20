@@ -54,6 +54,7 @@ enum ikstype {
 struct iks_struct;
 typedef struct iks_struct iks;
 
+const char *iks_version(void);
 iks *iks_new (const char *name);
 iks *iks_new_within (const char *name, ikstack *s);
 iks *iks_insert (iks *x, const char *name);
