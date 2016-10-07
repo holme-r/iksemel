@@ -3,6 +3,7 @@
 ** This code is free software; you can redistribute it and/or
 ** modify it under the terms of GNU Lesser General Public License.
 */
+/* Copyright 2015-2016 ARRIS Enterprises, LLC. */
 
 #include "common.h"
 #include "iksemel.h"
