@@ -3,7 +3,8 @@
 ** This code is free software; you can redistribute it and/or
 ** modify it under the terms of GNU Lesser General Public License.
 */
-/* Copyright 2015-2016 ARRIS Enterprises, LLC. */
+/* Portions of code */
+/* Copyright 2015-2017 ARRIS Enterprises, LLC. */
 
 #include "common.h"
 #include "iksemel.h"
@@ -284,6 +285,12 @@ iks_make_resource_bind (iksid *id)
 
 	x = iks_new("iq");
 	iks_insert_attrib(x, "type", "set");
+
+    /* Copyright 2017 ARRIS Enterprises, LLC. */
+    /* id attribute is mandatory for IQ stanza, and is required by eJabberd 17.04 */
+	iks_insert_attrib(x, "id", "bind");
+
+
 	y = iks_insert(x, "bind");
 	iks_insert_attrib(y, "xmlns", IKS_NS_XMPP_BIND);
 	if (id->resource && iks_strcmp(id->resource, "")) {
