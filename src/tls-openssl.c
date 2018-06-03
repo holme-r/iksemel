@@ -25,10 +25,16 @@ static int init_done;
 static int
 my_bio_create (BIO *b)
 {
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 	b->init = 1;
 	b->num = 0;
 	b->ptr = NULL;
 	b->flags = 0 ;
+#else
+	BIO_set_init (b, 1);
+	BIO_set_data (b, NULL);
+	BIO_set_flags (b, 0);
+#endif
 	return 1;
 }
 
@@ -37,16 +43,26 @@ my_bio_destroy (BIO *b)
 {
 	if (b == 0) return 0;
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 	b->ptr = NULL;
 	b->init = 0;
 	b->flags = 0;
+#else
+	BIO_set_init (b, 0);
+	BIO_set_data (b, NULL);
+	BIO_set_flags (b, 0);
+#endif
 	return 1;
 }
 
 static int
 my_bio_read (BIO *b, char *buf, int len)
 {
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 	struct ikstls_data *data = (struct ikstls_data *) b->ptr;
+#else
+	struct ikstls_data *data = (struct ikstls_data *) BIO_get_data (b);
+#endif
 	int ret;
 
 	if (buf == NULL || len <= 0 || data == NULL) return 0;
@@ -59,7 +75,11 @@ my_bio_read (BIO *b, char *buf, int len)
 static int
 my_bio_write (BIO *b, const char *buf, int len)
 {
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 	struct ikstls_data *data = (struct ikstls_data *) b->ptr;
+#else
+	struct ikstls_data *data = (struct ikstls_data *) BIO_get_data (b);
+#endif
 	int ret;
 
 	if (buf == NULL || len <= 0 || data == NULL) return 0;
@@ -97,6 +117,7 @@ my_bio_puts (BIO *b, const char *str)
 	return my_bio_write (b, str, strlen(str));
 }
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 static BIO_METHOD my_bio_method = {
 	( 100 | 0x400 ),
 	"iksemel transport",
@@ -108,6 +129,9 @@ static BIO_METHOD my_bio_method = {
 	my_bio_create,
 	my_bio_destroy
 };
+#else
+static BIO_METHOD *my_bio_method;
+#endif
 
 static int
 tls_handshake (struct ikstls_data **datap, ikstransport *trans, void *sock)
@@ -145,8 +169,22 @@ tls_handshake (struct ikstls_data **datap, ikstransport *trans, void *sock)
 		return IKS_NOMEM;
 	}
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 	bio = BIO_new (&my_bio_method);
 	bio->ptr = (void *) data;
+#else
+	my_bio_method = BIO_meth_new (( 100 | 0x400 ), "iksemel transport");
+	BIO_meth_set_write (my_bio_method, my_bio_write);
+	BIO_meth_set_read (my_bio_method, my_bio_read);
+	BIO_meth_set_puts (my_bio_method, my_bio_puts);
+	BIO_meth_set_gets (my_bio_method, my_bio_gets);
+	BIO_meth_set_ctrl (my_bio_method, my_bio_ctrl);
+	BIO_meth_set_create (my_bio_method, my_bio_create);
+	BIO_meth_set_destroy (my_bio_method, my_bio_destroy);
+	bio = BIO_new (my_bio_method);
+	BIO_meth_free (my_bio_method);
+	BIO_set_data (bio, (void *) data);
+#endif
 	SSL_set_bio (data->ssl, bio, bio);
 	if (SSL_connect (data->ssl) < 0) {
 		SSL_free (data->ssl);
